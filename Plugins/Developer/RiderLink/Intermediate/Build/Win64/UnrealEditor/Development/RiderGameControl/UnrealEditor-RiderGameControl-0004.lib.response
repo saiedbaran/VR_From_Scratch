@@ -1,0 +1,11 @@
+/NOLOGO
+/errorReport:prompt
+/MACHINE:x64
+/SUBSYSTEM:WINDOWS
+/DEF
+/NAME:"UnrealEditor-RiderGameControl-0004.dll"
+/IGNORE:4221
+/NODEFAULTLIB
+"C:\Users\Saeed\Documents\Unreal Projects\VRCharacter\Plugins\Developer\RiderLink\Intermediate\Build\Win64\UnrealEditor\Development\RiderGameControl\RiderGameControl.cpp.obj"
+"C:\Users\Saeed\Documents\Unreal Projects\VRCharacter\Plugins\Developer\RiderLink\Intermediate\Build\Win64\UnrealEditor\Development\RiderGameControl\Default.rc2.res"
+/OUT:"C:\Users\Saeed\Documents\Unreal Projects\VRCharacter\Plugins\Developer\RiderLink\Intermediate\Build\Win64\UnrealEditor\Development\RiderGameControl\UnrealEditor-RiderGameControl-0004.lib"

@@ -3,6 +3,7 @@
 
 #include "VRCharacterBase.h"
 #include "CineCameraComponent.h"
+#include "HandSkeletalActor.h"
 #include "Components/CapsuleComponent.h"
 
 // Sets default values
@@ -21,6 +22,7 @@ AVRCharacterBase::AVRCharacterBase()
 	ControllerBase = CreateDefaultSubobject<USceneComponent>(TEXT("ControllerBase"));
 	ControllerBase->SetupAttachment(VROffset);
 
+	// Create Motion Controllers
 	RightMotionController = CreateDefaultSubobject<UMotionControllerComponent>(TEXT("RightMotionController"));
 	RightMotionController->SetupAttachment(ControllerBase);
 	RightMotionController->SetTrackingMotionSource(FName("Right"));
@@ -28,20 +30,52 @@ AVRCharacterBase::AVRCharacterBase()
 	LeftMotionController = CreateDefaultSubobject<UMotionControllerComponent>(TEXT("LeftMotionController"));
 	LeftMotionController->SetupAttachment(ControllerBase);
 	LeftMotionController->SetTrackingMotionSource(FName("Left"));
-	
+
+	// Create placeholder for hands
+	RightHandPlaceHolder = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("RightHandPlaceHolder"));
+	RightHandPlaceHolder->SetupAttachment(RightMotionController);
+	RightHandPlaceHolder->SetHiddenInGame(true);
+
+	LeftHandPlaceHolder = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("LeftHandPlaceHolder"));
+	LeftHandPlaceHolder->SetupAttachment(LeftMotionController);
+	LeftHandPlaceHolder->SetHiddenInGame(true);
+
 }
 
 // Called when the game starts or when spawned
 void AVRCharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
+
+	SpawnHandSkeletalMeshActors();
+	
 }
+
+void AVRCharacterBase::SpawnHandSkeletalMeshActors()
+{
+	RightHand = Cast<AHandSkeletalActor>(GetWorld()->SpawnActor<AActor>(RightHandActorTemplate, RightHandPlaceHolder->GetComponentTransform()));
+	if (RightHand)
+	{
+		RightHand->AttachToComponent(RightMotionController, FAttachmentTransformRules::KeepWorldTransform);
+		RightHand->SetOwner(this);
+	}
+
+	LeftHand = Cast<AHandSkeletalActor>(GetWorld()->SpawnActor<AActor>(LeftHandActorTemplate, LeftHandPlaceHolder->GetComponentTransform()));
+	if (LeftHand)
+	{
+		LeftHand->AttachToComponent(LeftMotionController, FAttachmentTransformRules::KeepWorldTransform);
+		LeftHand->SetOwner(this);
+	}
+}
+
 
 void AVRCharacterBase::CharacterMoveForward(float ratio)
 {
 	const auto cameraProjectedForward =
 		FVector(VRCamera->GetForwardVector().X, VRCamera->GetForwardVector().Y, 0).GetSafeNormal();
 	AddActorWorldOffset(cameraProjectedForward * ratio * MaximumSpeed);
+
+	RightHand->UpdateTeleportPose(ratio);
 }
 
 void AVRCharacterBase::FindFocusDistance()

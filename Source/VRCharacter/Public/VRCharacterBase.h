@@ -7,6 +7,7 @@
 #include "GameFramework/Character.h"
 #include "VRCharacterBase.generated.h"
 
+class AHandSkeletalActor;
 class UCineCameraComponent;
 
 UCLASS()
@@ -32,10 +33,12 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void FindFocusDistance();
 
+	void SpawnHandSkeletalMeshActors();
+
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
 	USceneComponent* VROffset;
-	
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
 	UCineCameraComponent* VRCamera;
 
@@ -45,13 +48,33 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
 	UMotionControllerComponent* RightMotionController;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Components")
+	TSubclassOf<AHandSkeletalActor> RightHandActorTemplate;
+
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
 	UMotionControllerComponent* LeftMotionController;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Components")
+	TSubclassOf<AHandSkeletalActor> LeftHandActorTemplate;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Locomotion|Movement")
 	float MaximumSpeed = 3.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Locomotion|Movement")
 	float MaximumFocusTrackingDistance = 10000.0f;
-	
+
+protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Components|Hands")
+	AHandSkeletalActor* RightHand;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Components")
+	USkeletalMeshComponent* RightHandPlaceHolder;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Components|Hands")
+	AHandSkeletalActor* LeftHand;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Components")
+	USkeletalMeshComponent* LeftHandPlaceHolder;
 };
