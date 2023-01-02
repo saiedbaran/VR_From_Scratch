@@ -23,6 +23,12 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	UFUNCTION(BlueprintCallable)
+	void UpdateRightHandPose(float ratio);
+
+	UFUNCTION(BlueprintCallable)
+	void UpdateLeftHandPose(float ratio);
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -57,6 +63,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Components")
 	TSubclassOf<AHandSkeletalActor> LeftHandActorTemplate;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components|Teleportation")
+	UStaticMeshComponent* TeleportLocationIndicator;
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Locomotion|Movement")

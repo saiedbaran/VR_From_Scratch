@@ -40,6 +40,12 @@ AVRCharacterBase::AVRCharacterBase()
 	LeftHandPlaceHolder->SetupAttachment(LeftMotionController);
 	LeftHandPlaceHolder->SetHiddenInGame(true);
 
+	// create teleportation components
+	TeleportLocationIndicator = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("TeleportLocationIndicator"));
+	TeleportLocationIndicator->SetupAttachment(RootComponent);
+	TeleportLocationIndicator->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	TeleportLocationIndicator->SetHiddenInGame(true);
+
 }
 
 // Called when the game starts or when spawned
@@ -75,7 +81,7 @@ void AVRCharacterBase::CharacterMoveForward(float ratio)
 		FVector(VRCamera->GetForwardVector().X, VRCamera->GetForwardVector().Y, 0).GetSafeNormal();
 	AddActorWorldOffset(cameraProjectedForward * ratio * MaximumSpeed);
 
-	RightHand->UpdateTeleportPose(ratio);
+	UpdateRightHandPose(ratio);
 }
 
 void AVRCharacterBase::FindFocusDistance()
@@ -104,4 +110,13 @@ void AVRCharacterBase::Tick(float DeltaTime)
 void AVRCharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
+}
+
+void AVRCharacterBase::UpdateRightHandPose(float ratio)
+{
+	RightHand->UpdateTeleportPose(ratio);
+}
+
+void AVRCharacterBase::UpdateLeftHandPose(float ratio)
+{
 }
