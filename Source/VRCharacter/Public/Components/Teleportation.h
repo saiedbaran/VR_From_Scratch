@@ -6,6 +6,7 @@
 #include "Teleportation.generated.h"
 
 
+class ATeleportationTrace;
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class VRCHARACTER_API UTeleportation : public UActorComponent
 {
@@ -34,6 +35,9 @@ public:
 
 protected:
 	bool bIsTracingForTeleportLocation = false;
+
+	UPROPERTY(VisibleAnywhere,BlueprintReadWrite, Category = "Components")
+	ATeleportationTrace* TeleportTrace;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character")
 	AVRCharacterBase* VRCharacter;

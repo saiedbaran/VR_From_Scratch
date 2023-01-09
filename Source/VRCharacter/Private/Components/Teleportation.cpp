@@ -1,7 +1,10 @@
 ﻿#include "Components/Teleportation.h"
 
 #include "CineCameraComponent.h"
+#include "NiagaraComponent.h"
+#include "TeleportationTrace.h"
 #include "VRCharacterBase.h"
+#include "Components/SplineComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 
@@ -48,8 +51,11 @@ void UTeleportation::BeginTeleport(float ratio)
 void UTeleportation::EndTeleport()
 {
 	bIsTracingForTeleportLocation = false;
+
 	VRCharacter->TeleportLocationIndicator->SetHiddenInGame(true);
 	VRCharacter->UpdateRightHandPose(0.0f);
+
+	if (TeleportTrace) { TeleportTrace->NiagaraComponent->SetHiddenInGame(true); }
 }
 
 void UTeleportation::TraceForTeleportLocation()
@@ -74,13 +80,12 @@ void UTeleportation::TraceForTeleportLocation()
 	if (UGameplayStatics::PredictProjectilePath(this, predictParams, predictResult))
 	{
 		// Debugging location
-
 		/*if (GEngine)
 		{
 			GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Green,
 			                                 FString::Printf(
-				                                 TEXT("Predicted Location: %s"),
-				                                 *predictResult.HitResult.Location.ToString()));
+				                                 TEXT("Number of Predicted Points: %d"),
+				                                 predictResult.PathData.Num()));
 		}*/
 
 		VRCharacter->TeleportLocationIndicator->SetWorldLocation(predictResult.HitResult.Location);
@@ -89,13 +94,30 @@ void UTeleportation::TraceForTeleportLocation()
 			VRCharacter->VRCamera->GetForwardVector(), FVector(0, 0, 1));
 		VRCharacter->TeleportLocationIndicator->SetWorldRotation(
 			UKismetMathLibrary::MakeRotFromX(camera2DForward));
+
+		if (TeleportTrace)
+		{
+			TeleportTrace->NiagaraComponent->SetHiddenInGame(false);
+			TeleportTrace->UpdateSplineLocationTangent(predictResult.PathData[0].Location,
+			                                           predictResult.HitResult.Location,
+			                                           VRCharacter->RightMotionController->GetForwardVector(),
+			                                           FVector(0, 0, 1));
+		}
+
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("TeleportTrace is null"));
+		}
 	}
 
 	else
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Red,
+		// Debug
+
+		/*GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Red,
 		                                 FString::Printf(
-			                                 TEXT("No Hit")));
+			                                 TEXT("No Hit")));*/
 		VRCharacter->TeleportLocationIndicator->SetHiddenInGame(true);
+		if (TeleportTrace) { TeleportTrace->NiagaraComponent->SetHiddenInGame(true); }
 	}
 }
