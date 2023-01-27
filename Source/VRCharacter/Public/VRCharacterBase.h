@@ -67,6 +67,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components|Teleportation")
 	UStaticMeshComponent* TeleportLocationIndicator;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components|Teleportation")
+	UStaticMeshComponent* TeleportPreventionIndicator;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Locomotion|Movement")
 	float MaximumSpeed = 3.0f;

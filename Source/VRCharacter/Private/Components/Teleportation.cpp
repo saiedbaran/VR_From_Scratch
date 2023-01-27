@@ -3,6 +3,7 @@
 #include "CineCameraComponent.h"
 #include "NiagaraComponent.h"
 #include "TeleportationTrace.h"
+#include "Components/TeleportPreventedArea.h"
 #include "VRCharacterBase.h"
 #include "Components/SplineComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -53,9 +54,11 @@ void UTeleportation::EndTeleport()
 	bIsTracingForTeleportLocation = false;
 
 	VRCharacter->TeleportLocationIndicator->SetHiddenInGame(true);
+	VRCharacter->TeleportPreventionIndicator->SetHiddenInGame(true);
 	VRCharacter->UpdateRightHandPose(0.0f);
 
 	if (TeleportTrace) { TeleportTrace->NiagaraComponent->SetHiddenInGame(true); }
+	if (bFoundTeleportLocation) {TeleportAction();}
 }
 
 void UTeleportation::TraceForTeleportLocation()
@@ -88,26 +91,50 @@ void UTeleportation::TraceForTeleportLocation()
 				                                 predictResult.PathData.Num()));
 		}*/
 
-		VRCharacter->TeleportLocationIndicator->SetWorldLocation(predictResult.HitResult.Location);
-		VRCharacter->TeleportLocationIndicator->SetHiddenInGame(false);
+		TeleportLocation = predictResult.HitResult.Location;
 		auto camera2DForward = UKismetMathLibrary::ProjectVectorOnToPlane(
 			VRCharacter->VRCamera->GetForwardVector(), FVector(0, 0, 1));
-		VRCharacter->TeleportLocationIndicator->SetWorldRotation(
-			UKismetMathLibrary::MakeRotFromX(camera2DForward));
 
 		if (TeleportTrace)
 		{
 			TeleportTrace->NiagaraComponent->SetHiddenInGame(false);
 			TeleportTrace->UpdateSplineLocationTangent(predictResult.PathData[0].Location,
-			                                           predictResult.HitResult.Location,
+			                                           TeleportLocation,
 			                                           VRCharacter->RightMotionController->GetForwardVector(),
 			                                           FVector(0, 0, 1));
 		}
 
 		else
 		{
+			// Debug Only
 			UE_LOG(LogTemp, Error, TEXT("TeleportTrace is null"));
 		}
+
+		// Check if it is possible to teleport to the found location
+		if (predictResult.HitResult.GetActor()->GetComponentByClass(UTeleportPreventedArea::StaticClass()))
+		{
+			VRCharacter->TeleportLocationIndicator->SetHiddenInGame(true);
+			VRCharacter->TeleportPreventionIndicator->SetHiddenInGame(false);
+
+			VRCharacter->TeleportPreventionIndicator->SetWorldLocation(TeleportLocation);
+			VRCharacter->TeleportPreventionIndicator->SetWorldRotation(
+				UKismetMathLibrary::MakeRotFromX(camera2DForward));
+
+			bFoundTeleportLocation = false;
+
+			return;
+		}
+
+
+		bFoundTeleportLocation = true;
+
+
+		VRCharacter->TeleportPreventionIndicator->SetHiddenInGame(true);
+		VRCharacter->TeleportLocationIndicator->SetHiddenInGame(false);
+
+		VRCharacter->TeleportLocationIndicator->SetWorldLocation(TeleportLocation);
+		VRCharacter->TeleportLocationIndicator->SetWorldRotation(
+			UKismetMathLibrary::MakeRotFromX(camera2DForward));
 	}
 
 	else
@@ -117,7 +144,27 @@ void UTeleportation::TraceForTeleportLocation()
 		/*GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Red,
 		                                 FString::Printf(
 			                                 TEXT("No Hit")));*/
+
 		VRCharacter->TeleportLocationIndicator->SetHiddenInGame(true);
+		VRCharacter->TeleportPreventionIndicator->SetHiddenInGame(true);
+
 		if (TeleportTrace) { TeleportTrace->NiagaraComponent->SetHiddenInGame(true); }
+		bFoundTeleportLocation = false;
 	}
+}
+
+void UTeleportation::TeleportAction()
+{
+	UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0)->
+		StartCameraFade(0, 1, TeleportDelay, FLinearColor::Black);
+
+	FTimerHandle FadeTimer;
+	GetWorld()->GetTimerManager().SetTimer(FadeTimer, this, &UTeleportation::TeleportCharacter, TeleportDelay);
+}
+
+void UTeleportation::TeleportCharacter()
+{
+	VRCharacter->SetActorLocation(TeleportLocation);
+	UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0)->
+		StartCameraFade(1, 0, TeleportDelay, FLinearColor::Black);
 }

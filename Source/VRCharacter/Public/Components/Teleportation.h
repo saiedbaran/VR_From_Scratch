@@ -26,6 +26,12 @@ public:
 		void EndTeleport();
 	void TraceForTeleportLocation();
 
+	UFUNCTION(BlueprintCallable)
+	void TeleportAction();
+
+	UFUNCTION(BlueprintCallable)
+	void TeleportCharacter();
+
 
 protected:
 	// Called when the game starts
@@ -44,4 +50,11 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Teleportation")
 	float TeleportTraceProjectileVelocity = 1000.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Teleportation")
+	float TeleportDelay = 0.5f;
+
+private:
+	bool bFoundTeleportLocation = true;
+	FVector TeleportLocation;
 };

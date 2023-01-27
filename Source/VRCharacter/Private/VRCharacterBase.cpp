@@ -46,6 +46,11 @@ AVRCharacterBase::AVRCharacterBase()
 	TeleportLocationIndicator->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	TeleportLocationIndicator->SetHiddenInGame(true);
 
+	TeleportPreventionIndicator = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("TeleportPreventionIndicator"));
+	TeleportPreventionIndicator->SetupAttachment(RootComponent);
+	TeleportPreventionIndicator->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	TeleportPreventionIndicator->SetHiddenInGame(true);
+
 }
 
 // Called when the game starts or when spawned
