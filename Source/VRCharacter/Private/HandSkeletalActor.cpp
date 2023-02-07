@@ -4,6 +4,10 @@
 #include "HandSkeletalActor.h"
 
 #include "VRHandAnimationInstance.h"
+#include "Components/SphereComponent.h"
+#include "Components/WidgetComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
 
 
 // Sets default values
@@ -17,6 +21,26 @@ AHandSkeletalActor::AHandSkeletalActor()
 
 	HandMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("HandMesh"));
 	HandMesh->SetupAttachment(Base);
+
+	GrabSphere = CreateDefaultSubobject<USphereComponent>(TEXT("GrabSphere"));
+	GrabSphere->SetupAttachment(HandMesh);
+	GrabSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	GrabSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
+	GrabSphere->OnComponentBeginOverlap.AddDynamic(this, &AHandSkeletalActor::OnGrabSphereBeginOverlap);
+
+	DebugComponents = CreateDefaultSubobject<USceneComponent>(TEXT("DebugComponents"));
+	DebugComponents->SetupAttachment(HandMesh);
+}
+
+void AHandSkeletalActor::RotateDebugWidgetToCamera()
+{
+	if (!DebugWidgetComponent) { return; }
+
+	auto lookDirection = UKismetMathLibrary::FindLookAtRotation(
+		DebugWidgetComponent->GetComponentLocation(),
+		UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0)->GetCameraLocation());
+
+	DebugWidgetComponent->SetWorldRotation(lookDirection);
 }
 
 // Called when the game starts or when spawned
@@ -25,7 +49,7 @@ void AHandSkeletalActor::BeginPlay()
 	Super::BeginPlay();
 
 	HandAnimationInstance = Cast<UVRHandAnimationInstance>(HandMesh->GetAnimInstance());
-	if(HandAnimationInstance)
+	if (HandAnimationInstance)
 	{
 		HandAnimationInstance->IsInDefaultPose = 0;
 	}
@@ -35,11 +59,21 @@ void AHandSkeletalActor::BeginPlay()
 void AHandSkeletalActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	if(bDebugVisualizationEnabled){RotateDebugWidgetToCamera();}
 }
 
 void AHandSkeletalActor::UpdateTeleportPose(float Alpha)
 {
-	if(!HandAnimationInstance) { return; }
+	if (!HandAnimationInstance) { return; }
 	HandAnimationInstance->PoseAlphaTeleport = Alpha;
 }
 
+void AHandSkeletalActor::OnGrabSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if(OtherComp->ComponentTags.Contains("tag_grabbale"))
+	{
+		UpdateDebugText("Overlapped Actor", OtherActor->GetName());
+	}
+}
