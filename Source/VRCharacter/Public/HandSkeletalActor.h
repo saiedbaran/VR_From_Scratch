@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "MotionControllerComponent.h"
+#include "VRCharacterStatics.h"
 #include "GameFramework/Actor.h"
 #include "HandSkeletalActor.generated.h"
 
@@ -21,15 +23,29 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION(BlueprintCallable)
+	void ResetPoseToDefault();
+
+	UFUNCTION(BlueprintCallable)
 	void UpdateTeleportPose(float Alpha);
+
 
 	/**
 	 * @brief Grab Interaction
 	 */
 	UFUNCTION()
 	void OnGrabSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-	                            UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
-	                            const FHitResult& SweepResult);
+	                              UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
+	                              const FHitResult& SweepResult);
+	UFUNCTION()
+	void OnGrabSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	                            UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+	UFUNCTION(BlueprintCallable, Category = "Interactions|Grab")
+	void GrabPressed(UMotionControllerComponent* MotionController);
+	UFUNCTION(BlueprintCallable, Category = "Interactions|Grab")
+	void GrabReleased(UMotionControllerComponent* MotionController);
+
+	UFUNCTION(BlueprintCallable)
+	void UpdateGrabPose(float Alpha);
 
 	/**
 	 * @brief 
@@ -59,14 +75,24 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UVRHandAnimationInstance* HandAnimationInstance;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Interactions|Properties")
+	TEnumAsByte<EHandType> HandType = EHandType::RightHand;
+
 	/**
 	 * @brief Grab Interaction
 	 */
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Interactions|Grab")
 	USphereComponent* GrabSphere;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Interactions|Grab")
 	bool bUseGrabSphere = true;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Interactions|Grab")
+	AActor* ReadyToGrabActor = nullptr;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Interactions|Grab")
+	USceneComponent* ReadyToGrabComponent = nullptr;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Interactions|Grab")
+	AActor* AttachedActor = nullptr;
+	
 
 	/**
 	 * @brief Debug Components and members

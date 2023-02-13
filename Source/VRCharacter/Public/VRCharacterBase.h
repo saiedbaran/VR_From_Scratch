@@ -24,10 +24,23 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	UFUNCTION(BlueprintCallable)
-	void UpdateRightHandPose(float ratio);
-
+	void UpdateRightHandPose(float teleportRatio = 0, float grabRatio = 0, bool updateTeleportPose = true,
+										   bool updateGrabPose = false);
 	UFUNCTION(BlueprintCallable)
-	void UpdateLeftHandPose(float ratio);
+	void UpdateLeftHandPose(float teleportRatio = 0, float grabRatio = 0, bool updateTeleportPose = true,
+										   bool updateGrabPose = true);
+
+	/**
+	 * @brief Interaction functions
+	 */
+	UFUNCTION(BlueprintCallable)
+	void RightGrabPressed();
+	UFUNCTION(BlueprintCallable)
+	void LeftGrabPressed();
+	UFUNCTION(BlueprintCallable)
+	void RightGrabReleased();
+	UFUNCTION(BlueprintCallable)
+	void LeftGrabReleased();
 
 protected:
 	// Called when the game starts or when spawned

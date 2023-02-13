@@ -50,7 +50,6 @@ AVRCharacterBase::AVRCharacterBase()
 	TeleportPreventionIndicator->SetupAttachment(RootComponent);
 	TeleportPreventionIndicator->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	TeleportPreventionIndicator->SetHiddenInGame(true);
-
 }
 
 // Called when the game starts or when spawned
@@ -59,23 +58,26 @@ void AVRCharacterBase::BeginPlay()
 	Super::BeginPlay();
 
 	SpawnHandSkeletalMeshActors();
-	
 }
 
 void AVRCharacterBase::SpawnHandSkeletalMeshActors()
 {
-	RightHand = Cast<AHandSkeletalActor>(GetWorld()->SpawnActor<AActor>(RightHandActorTemplate, RightHandPlaceHolder->GetComponentTransform()));
+	RightHand = Cast<AHandSkeletalActor>(
+		GetWorld()->SpawnActor<AActor>(RightHandActorTemplate, RightHandPlaceHolder->GetComponentTransform()));
 	if (RightHand)
 	{
 		RightHand->AttachToComponent(RightMotionController, FAttachmentTransformRules::KeepWorldTransform);
 		RightHand->SetOwner(this);
+		RightHand->HandType = EHandType::RightHand;
 	}
 
-	LeftHand = Cast<AHandSkeletalActor>(GetWorld()->SpawnActor<AActor>(LeftHandActorTemplate, LeftHandPlaceHolder->GetComponentTransform()));
+	LeftHand = Cast<AHandSkeletalActor>(
+		GetWorld()->SpawnActor<AActor>(LeftHandActorTemplate, LeftHandPlaceHolder->GetComponentTransform()));
 	if (LeftHand)
 	{
 		LeftHand->AttachToComponent(LeftMotionController, FAttachmentTransformRules::KeepWorldTransform);
 		LeftHand->SetOwner(this);
+		LeftHand->HandType = EHandType::LeftHand;
 	}
 }
 
@@ -85,22 +87,19 @@ void AVRCharacterBase::CharacterMoveForward(float ratio)
 	const auto cameraProjectedForward =
 		FVector(VRCamera->GetForwardVector().X, VRCamera->GetForwardVector().Y, 0).GetSafeNormal();
 	AddActorWorldOffset(cameraProjectedForward * ratio * MaximumSpeed);
-
-	UpdateRightHandPose(ratio);
 }
 
 void AVRCharacterBase::FindFocusDistance()
 {
 	FVector start = VRCamera->GetComponentLocation();
-	FVector end = start + VRCamera->GetForwardVector()*MaximumFocusTrackingDistance;
+	FVector end = start + VRCamera->GetForwardVector() * MaximumFocusTrackingDistance;
 	FHitResult hitResult;
 	FCameraFocusSettings focusSettings;
 	focusSettings.ManualFocusDistance = MaximumFocusTrackingDistance;
-	if(!GetWorld()->LineTraceSingleByChannel(hitResult, start, end, ECC_Visibility)) {return;}
-	
+	if (!GetWorld()->LineTraceSingleByChannel(hitResult, start, end, ECC_Visibility)) { return; }
+
 	focusSettings.ManualFocusDistance = hitResult.Distance;
 	VRCamera->SetFocusSettings(focusSettings);
-
 }
 
 // Called every frame
@@ -117,11 +116,44 @@ void AVRCharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 }
 
-void AVRCharacterBase::UpdateRightHandPose(float ratio)
+void AVRCharacterBase::UpdateRightHandPose(float teleportRatio, float grabRatio, bool updateTeleportPose,
+                                           bool updateGrabPose)
 {
-	RightHand->UpdateTeleportPose(ratio);
+	if(teleportRatio < 0.01f && grabRatio < 0.01f)
+	{
+		RightHand->ResetPoseToDefault();
+		return;
+	}
+	
+	if(updateTeleportPose)
+	{
+		RightHand->UpdateTeleportPose(teleportRatio);
+	}
+	if(updateGrabPose)
+	{
+		RightHand->UpdateGrabPose(grabRatio);
+	}
 }
 
-void AVRCharacterBase::UpdateLeftHandPose(float ratio)
+void AVRCharacterBase::UpdateLeftHandPose(float teleportRatio, float grabRatio, bool updateTeleportPose,
+										   bool updateGrabPose)
+{
+}
+
+void AVRCharacterBase::RightGrabPressed()
+{
+	RightHand->GrabPressed(RightMotionController);
+}
+
+void AVRCharacterBase::LeftGrabPressed()
+{
+}
+
+void AVRCharacterBase::RightGrabReleased()
+{
+	RightHand->GrabReleased(RightMotionController);
+}
+
+void AVRCharacterBase::LeftGrabReleased()
 {
 }

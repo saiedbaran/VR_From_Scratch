@@ -46,7 +46,7 @@ void UTeleportation::BeginTeleport(float ratio)
 	// start tracing for the teleport location
 	bIsTracingForTeleportLocation = true;
 
-	VRCharacter->UpdateRightHandPose(ratio);
+	VRCharacter->UpdateRightHandPose(ratio, 0, true, false);
 }
 
 void UTeleportation::EndTeleport()
@@ -55,10 +55,10 @@ void UTeleportation::EndTeleport()
 
 	VRCharacter->TeleportLocationIndicator->SetHiddenInGame(true);
 	VRCharacter->TeleportPreventionIndicator->SetHiddenInGame(true);
-	VRCharacter->UpdateRightHandPose(0.0f);
+	VRCharacter->UpdateRightHandPose(0.0f, 0, true, false);
 
 	if (TeleportTrace) { TeleportTrace->NiagaraComponent->SetHiddenInGame(true); }
-	if (bFoundTeleportLocation) {TeleportAction();}
+	if (bFoundTeleportLocation) { TeleportAction(); }
 }
 
 void UTeleportation::TraceForTeleportLocation()

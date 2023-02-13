@@ -6,6 +6,7 @@
 #include "VRHandAnimationInstance.h"
 #include "Components/SphereComponent.h"
 #include "Components/WidgetComponent.h"
+#include "Interfaces/Interactable.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 
@@ -27,6 +28,7 @@ AHandSkeletalActor::AHandSkeletalActor()
 	GrabSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	GrabSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
 	GrabSphere->OnComponentBeginOverlap.AddDynamic(this, &AHandSkeletalActor::OnGrabSphereBeginOverlap);
+	GrabSphere->OnComponentEndOverlap.AddDynamic(this, &AHandSkeletalActor::OnGrabSphereEndOverlap);
 
 	DebugComponents = CreateDefaultSubobject<USceneComponent>(TEXT("DebugComponents"));
 	DebugComponents->SetupAttachment(HandMesh);
@@ -60,7 +62,15 @@ void AHandSkeletalActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if(bDebugVisualizationEnabled){RotateDebugWidgetToCamera();}
+	if (bDebugVisualizationEnabled) { RotateDebugWidgetToCamera(); }
+}
+
+void AHandSkeletalActor::ResetPoseToDefault()
+
+{
+	if (!HandAnimationInstance) { return; }
+	HandAnimationInstance->IsInDefaultPose = 0;
+	HandAnimationInstance->IsInDefaultPose = 1;
 }
 
 void AHandSkeletalActor::UpdateTeleportPose(float Alpha)
@@ -69,11 +79,57 @@ void AHandSkeletalActor::UpdateTeleportPose(float Alpha)
 	HandAnimationInstance->PoseAlphaTeleport = Alpha;
 }
 
-void AHandSkeletalActor::OnGrabSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void AHandSkeletalActor::GrabPressed(UMotionControllerComponent* MotionController)
 {
-	if(OtherComp->ComponentTags.Contains("tag_grabbale"))
+	if (const auto interactable = Cast<IInteractable>(ReadyToGrabActor))
+	{
+		interactable->GrabPressed(this);
+		AttachedActor = ReadyToGrabActor;
+	}
+}
+
+void AHandSkeletalActor::GrabReleased(UMotionControllerComponent* MotionController)
+{
+	if (const auto interactable = Cast<IInteractable>(AttachedActor))
+	{
+		interactable->GrabReleased(this);
+		AttachedActor = nullptr;
+		ReadyToGrabActor = nullptr;
+		ReadyToGrabComponent = nullptr;
+	}
+}
+
+void AHandSkeletalActor::UpdateGrabPose(float Alpha)
+{
+	if (!HandAnimationInstance) { return; }
+
+	HandAnimationInstance->IsInDefaultPose = 0;
+	HandAnimationInstance->PoseAlphaGrab = Alpha;
+}
+
+
+void AHandSkeletalActor::OnGrabSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+                                                  UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
+                                                  const FHitResult& SweepResult)
+{
+	if (OtherActor->GetClass()->ImplementsInterface(UInteractable::StaticClass()))
 	{
 		UpdateDebugText("Overlapped Actor", OtherActor->GetName());
+		ReadyToGrabActor = OtherActor;
+		ReadyToGrabComponent = OtherComp;
+	}
+}
+
+void AHandSkeletalActor::OnGrabSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+                                                UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+
+	if(ReadyToGrabActor != nullptr && OtherActor == ReadyToGrabActor)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Cyan,
+						 FString::Printf(TEXT("End Overlap: %s"), *OtherActor->GetName()));
+		UpdateDebugText("Overlapped Actor", "None");
+		ReadyToGrabActor = nullptr;
+		ReadyToGrabComponent = nullptr;
 	}
 }

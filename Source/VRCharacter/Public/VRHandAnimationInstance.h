@@ -19,5 +19,8 @@ public:
 	float PoseAlphaTeleport = 0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pose")
+	float PoseAlphaGrab = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pose")
 	float IsInDefaultPose = 1;
 };
