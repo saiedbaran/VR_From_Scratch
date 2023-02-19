@@ -22,6 +22,12 @@ class VRCHARACTER_API IInteractable
 	GENERATED_BODY()
 
 public:
-	virtual void GrabPressed(AHandSkeletalActor* Hand){}
-	virtual void GrabReleased(AHandSkeletalActor* Hand) {}
+	virtual void GrabPressed(AHandSkeletalActor* Hand)	{}
+	virtual void GrabReleased(AHandSkeletalActor* Hand)	{}
+
+	virtual bool IsGrabbityInteractable() { return false; }
+	virtual void GrabbityHoverBegin(AHandSkeletalActor* Hand) {}
+	virtual void GrabbityHoverEnd(AHandSkeletalActor* Hand) {}
+	virtual void GrabbityGrabPressed(AHandSkeletalActor* Hand) {}
+	virtual void GrabbityGrabReleased(AHandSkeletalActor* Hand) {}
 };

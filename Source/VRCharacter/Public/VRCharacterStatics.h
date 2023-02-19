@@ -9,3 +9,5 @@ enum EHandType
     RightHand,
     None
 };
+
+#define ECC_Grabbity ECollisionChannel::ECC_GameTraceChannel1

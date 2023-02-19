@@ -8,9 +8,19 @@
 #include "GameFramework/Actor.h"
 #include "HandSkeletalActor.generated.h"
 
+class UNiagaraComponent;
 class USphereComponent;
 class UWidgetComponent;
 class UVRHandAnimationInstance;
+
+
+UENUM()
+enum EInteractionMode
+{
+	Proximity,
+	Grabbity
+};
+
 UCLASS()
 class VRCHARACTER_API AHandSkeletalActor : public AActor
 {
@@ -44,6 +54,17 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Interactions|Grab")
 	void GrabReleased(UMotionControllerComponent* MotionController);
 
+	/**
+	 * @brief Grabbity Interaction functions
+	 */
+	UFUNCTION(BlueprintCallable)
+	void TraceForGrabbityActor();
+
+	UFUNCTION(BlueprintCallable)
+	void ToggleGrabbityGrabbing();
+
+
+
 	UFUNCTION(BlueprintCallable)
 	void UpdateGrabPose(float Alpha);
 
@@ -75,26 +96,64 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UVRHandAnimationInstance* HandAnimationInstance;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	UNiagaraComponent* GrabbityHandEffect;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Visuals")
 	UMaterialInstanceDynamic* DynamicMaterialInstance;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visuals")
+	TArray<FColor> OverlayColors;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visuals")
+	TArray<float> EmissionPowers;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Interactions|Mode")
+	TEnumAsByte<EInteractionMode> InteractionMode = EInteractionMode::Proximity;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Interactions|Properties")
 	TEnumAsByte<EHandType> HandType = EHandType::RightHand;
 
-	/**
-	 * @brief Grab Interaction
-	 */
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Interactions|Grab")
-	USphereComponent* GrabSphere;
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Interactions|Grab")
-	bool bUseGrabSphere = true;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Interactions|Grab")
-	AActor* ReadyToGrabActor = nullptr;
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Interactions|Grab")
-	USceneComponent* ReadyToGrabComponent = nullptr;
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Interactions|Grab")
-	AActor* AttachedActor = nullptr;
+
+	/**
+	 * @brief Proximity Grab Interaction
+	 */
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Interactions|ProximityGrab")
+	USphereComponent* GrabSphere;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Interactions|ProximityGrab")
+	bool bUseGrabSphere = true;
+	
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Interactions|ProximityGrab")
+	AActor* ReadyToProximityGrabActor = nullptr;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Interactions|ProximityGrab")
+	USceneComponent* ReadyToProximityGrabComponent = nullptr;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Interactions|ProximityGrab")
+	AActor* AttachedProximityActor = nullptr;
+
+	/**
+	 * @brief Grabbity Grab Interaction
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interactions|GrabbityGrab")
+	bool bIsGrabbityInteractionEnabled = false;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Interactions|GrabbityGrab")
+	AActor* ReadyToGrabbityGrabActor = nullptr;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Interactions|GrabbityGrab")
+	USceneComponent* ReadyToGrabbityGrabComponent = nullptr;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Interactions|GrabbityGrab")
+	AActor* AttachedGrabbityActor = nullptr;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Interactions|GrabbityGrab")
+	bool bIsGrabbityGrabbing = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interactions|GrabbityGrab")
+	float TraceRadius = 20;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interactions|GrabbityGrab")
+	float TraceMaxDistance = 1000;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interactions|GrabbityGrab")
+	bool bShowDebugTrace = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interactions|GrabbityGrab")
+	TEnumAsByte<ETraceTypeQuery> TraceChannel;
+	
 
 
 	/**
