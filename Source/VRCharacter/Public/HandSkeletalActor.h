@@ -75,6 +75,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UVRHandAnimationInstance* HandAnimationInstance;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Visuals")
+	UMaterialInstanceDynamic* DynamicMaterialInstance;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Interactions|Properties")
 	TEnumAsByte<EHandType> HandType = EHandType::RightHand;
 
@@ -92,7 +95,7 @@ public:
 	USceneComponent* ReadyToGrabComponent = nullptr;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Interactions|Grab")
 	AActor* AttachedActor = nullptr;
-	
+
 
 	/**
 	 * @brief Debug Components and members
