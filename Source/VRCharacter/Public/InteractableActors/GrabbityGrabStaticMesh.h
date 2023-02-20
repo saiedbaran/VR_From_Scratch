@@ -65,7 +65,7 @@ protected:
 	float currentGrabbityGrabTime = 0.0f;
 	FVector InitialGrabbityGrabLocation;
 	FRotator InitialGrabbityGrabRotation;
-	FRotator InitialDeltaRotation;
+	
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Components")
 	AHandSkeletalActor* GrabbityHoverHand = nullptr;

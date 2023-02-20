@@ -31,7 +31,7 @@ void AGrabbityGrabStaticMesh::BeginPlay()
 {
 	Super::BeginPlay();
 
-	InitialDeltaRotation = SkeletalMeshPH->GetRelativeRotation();
+
 }
 
 bool AGrabbityGrabStaticMesh::IsGrabbityInteractable()
@@ -43,21 +43,22 @@ void AGrabbityGrabStaticMesh::GrabbityHoverBegin(AHandSkeletalActor* Hand)
 {
 	Super::GrabbityHoverBegin(Hand);
 
-	if(GrabbityStage != Default) {return;}
-	
+	if (GrabbityStage != Default) { return; }
+
 	GrabbityStage = Hovering;
 	GrabbityHoverHand = Hand;
 
 	NiagaraComponent->SetHiddenInGame(false);
 	NiagaraComponent->SetVectorParameter("user.Direction",
-										 ((Hand->HandMesh->GetComponentLocation() - GetActorLocation()).GetSafeNormal()));
+	                                     ((Hand->HandMesh->GetComponentLocation() - GetActorLocation()).
+		                                     GetSafeNormal()));
 }
 
 void AGrabbityGrabStaticMesh::GrabbityHoverEnd(AHandSkeletalActor* Hand)
 {
 	Super::GrabbityHoverEnd(Hand);
 
-	if(GrabbityStage != Hovering) {return;}
+	if (GrabbityStage != Hovering) { return; }
 
 	GrabbityStage = Default;
 	GrabbityHoverHand = nullptr;
@@ -69,14 +70,14 @@ void AGrabbityGrabStaticMesh::GrabbityGrabPressed(AHandSkeletalActor* Hand)
 {
 	Super::GrabbityGrabPressed(Hand);
 
-	if(GrabbityStage == Transferring || GrabbityStage == Grabbed) {return;}
+	if (GrabbityStage == Transferring || GrabbityStage == Grabbed) { return; }
 
-	InitialGrabbityGrabLocation = SkeletalMeshPH->GetSocketLocation("socket_grab");
-	InitialGrabbityGrabRotation = SkeletalMeshPH->GetSocketRotation("socket_grab");
-	
+	InitialGrabbityGrabLocation = SkeletalMeshPH->GetComponentLocation();
+	InitialGrabbityGrabRotation = SkeletalMeshPH->GetComponentRotation();
+
 	StaticMeshComponent->SetSimulatePhysics(false);
 	GrabbityGrabHand = Hand;
-	
+
 	GrabbityStage = Transferring;
 }
 
@@ -84,7 +85,7 @@ void AGrabbityGrabStaticMesh::GrabbityGrabReleased(AHandSkeletalActor* Hand)
 {
 	Super::GrabbityGrabReleased(Hand);
 
-	if(GrabbityStage == Transferring || GrabbityStage == Grabbed)
+	if (GrabbityStage == Transferring || GrabbityStage == Grabbed)
 	{
 		StaticMeshComponent->SetSimulatePhysics(true);
 		currentGrabbityGrabTime = 0.f;
@@ -110,23 +111,23 @@ void AGrabbityGrabStaticMesh::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if(GrabbityStage == Grabbed) {return;}
+	if (GrabbityStage == Grabbed) { return; }
 
-	if(GrabbityStage == Transferring)
+	if (GrabbityStage == Transferring)
 	{
 		float ratio = currentGrabbityGrabTime / GrabbityGrabDuration;
 
-		auto handRotation = GrabbityGrabHand->HandMesh->GetSocketRotation("socket_grab");
-		auto currentRotation = FMath::Lerp(InitialGrabbityGrabRotation, handRotation, ratio);
-		SetActorRotation(currentRotation - InitialDeltaRotation);
+		auto handRotation = GrabbityGrabHand->HandMesh->GetComponentRotation();
+		auto currentRotation = FMath::Lerp(SkeletalMeshPH->GetComponentRotation(), handRotation, ratio);
+		SetActorRotation(currentRotation - (SkeletalMeshPH->GetComponentRotation()-GetActorRotation()));
 
-		auto handLocation = GrabbityGrabHand->HandMesh->GetSocketLocation("socket_grab");
-		auto currentLocation = FMath::Lerp(InitialGrabbityGrabLocation, handLocation, ratio);
-		SetActorLocation(currentLocation);
+		auto handLocation = GrabbityGrabHand->HandMesh->GetComponentLocation();
+		auto currentLocation = FMath::Lerp(SkeletalMeshPH->GetComponentLocation(), handLocation, ratio);
+		SetActorLocation(currentLocation - (SkeletalMeshPH->GetComponentLocation()-GetActorLocation()));
 
 		currentGrabbityGrabTime += DeltaTime;
 
-		if(ratio > 0.99f)
+		if (ratio > 0.99f)
 		{
 			currentGrabbityGrabTime = 0.f;
 			GrabbityStage = Grabbed;
@@ -138,9 +139,10 @@ void AGrabbityGrabStaticMesh::Tick(float DeltaTime)
 		}
 	}
 
-	if (GrabbityStage==Hovering && GrabbityHoverHand)
+	if (GrabbityStage == Hovering && GrabbityHoverHand)
 	{
 		NiagaraComponent->SetVectorParameter("user.Direction",
-		                                     ((GrabbityHoverHand->HandMesh->GetComponentLocation() - GetActorLocation()).GetSafeNormal()));
+		                                     ((GrabbityHoverHand->HandMesh->GetComponentLocation() - GetActorLocation())
+			                                     .GetSafeNormal()));
 	}
 }
