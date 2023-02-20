@@ -101,6 +101,7 @@ void AHandSkeletalActor::GrabPressed(UMotionControllerComponent* MotionControlle
 		{
 			interactable->GrabbityGrabPressed(this);
 			AttachedGrabbityActor = ReadyToGrabbityGrabActor;
+			GrabbityHandEffect->SetHiddenInGame(true);
 		}
 	}
 }
@@ -125,6 +126,8 @@ void AHandSkeletalActor::GrabReleased(UMotionControllerComponent* MotionControll
 			AttachedGrabbityActor = nullptr;
 			ReadyToGrabbityGrabActor = nullptr;
 			ReadyToGrabbityGrabComponent = nullptr;
+
+			GrabbityHandEffect->SetHiddenInGame(false);
 		}
 	}
 }

@@ -19,12 +19,19 @@ AGrabbityGrabStaticMesh::AGrabbityGrabStaticMesh()
 	NiagaraComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraComponent"));
 	NiagaraComponent->SetupAttachment(StaticMeshComponent);
 	NiagaraComponent->SetHiddenInGame(true);
+
+	SkeletalMeshPH = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMeshPH"));
+	SkeletalMeshPH->SetupAttachment(StaticMeshComponent);
+	SkeletalMeshPH->SetHiddenInGame(true);
+	SkeletalMeshPH->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 // Called when the game starts or when spawned
 void AGrabbityGrabStaticMesh::BeginPlay()
 {
 	Super::BeginPlay();
+
+	InitialDeltaRotation = SkeletalMeshPH->GetRelativeRotation();
 }
 
 bool AGrabbityGrabStaticMesh::IsGrabbityInteractable()
@@ -62,7 +69,11 @@ void AGrabbityGrabStaticMesh::GrabbityGrabPressed(AHandSkeletalActor* Hand)
 {
 	Super::GrabbityGrabPressed(Hand);
 
-	InitialGrabbityGrabLocation = GetActorLocation();
+	if(GrabbityStage == Transferring || GrabbityStage == Grabbed) {return;}
+
+	InitialGrabbityGrabLocation = SkeletalMeshPH->GetSocketLocation("socket_grab");
+	InitialGrabbityGrabRotation = SkeletalMeshPH->GetSocketRotation("socket_grab");
+	
 	StaticMeshComponent->SetSimulatePhysics(false);
 	GrabbityGrabHand = Hand;
 	
@@ -73,13 +84,15 @@ void AGrabbityGrabStaticMesh::GrabbityGrabReleased(AHandSkeletalActor* Hand)
 {
 	Super::GrabbityGrabReleased(Hand);
 
-	if(GrabbityStage != Transferring || GrabbityStage != Grabbed) {return;}
+	if(GrabbityStage == Transferring || GrabbityStage == Grabbed)
+	{
+		StaticMeshComponent->SetSimulatePhysics(true);
+		currentGrabbityGrabTime = 0.f;
+		GrabbityGrabHand = nullptr;
+		GrabbityStage = Default;
 
-	StaticMeshComponent->SetSimulatePhysics(true);
-	currentGrabbityGrabTime = 0.f;
-	GrabbityGrabHand = nullptr;
-
-	this->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+		this->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+	}
 }
 
 void AGrabbityGrabStaticMesh::GrabPressed(AHandSkeletalActor* Hand)
@@ -97,23 +110,32 @@ void AGrabbityGrabStaticMesh::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if(GrabbityStage == Grabbed) {return;}
+
 	if(GrabbityStage == Transferring)
 	{
 		float ratio = currentGrabbityGrabTime / GrabbityGrabDuration;
 
-		auto handLocation = GrabbityGrabHand->HandMesh->GetComponentLocation();
-		auto currentLocation = FMath::Lerp(InitialGrabbityGrabLocation, handLocation, ratio);
+		auto handRotation = GrabbityGrabHand->HandMesh->GetSocketRotation("socket_grab");
+		auto currentRotation = FMath::Lerp(InitialGrabbityGrabRotation, handRotation, ratio);
+		SetActorRotation(currentRotation - InitialDeltaRotation);
 
+		auto handLocation = GrabbityGrabHand->HandMesh->GetSocketLocation("socket_grab");
+		auto currentLocation = FMath::Lerp(InitialGrabbityGrabLocation, handLocation, ratio);
 		SetActorLocation(currentLocation);
-		
-		if(ratio > 0.98f)
+
+		currentGrabbityGrabTime += DeltaTime;
+
+		if(ratio > 0.99f)
 		{
 			currentGrabbityGrabTime = 0.f;
 			GrabbityStage = Grabbed;
 
 			this->AttachToActor(Cast<AActor>(GrabbityGrabHand), FAttachmentTransformRules::KeepWorldTransform);
+			NiagaraComponent->SetHiddenInGame(true);
+
+			return;
 		}
-		currentGrabbityGrabTime += DeltaTime;
 	}
 
 	if (GrabbityStage==Hovering && GrabbityHoverHand)

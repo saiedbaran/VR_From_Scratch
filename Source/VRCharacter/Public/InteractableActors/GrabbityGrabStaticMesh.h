@@ -52,17 +52,20 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Components")
 	UNiagaraComponent* NiagaraComponent;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Components")
+	USkeletalMeshComponent* SkeletalMeshPH;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Grabbity|Properties")
 	float GrabbityGrabDuration = 1.0f;
 
 	EGrabbityStage GrabbityStage = EGrabbityStage::Default;
 
 protected:
-	// bool bIsUnderGrabbityHover = false;
-	// bool bIsInGrabbityGrab = false;
 
 	float currentGrabbityGrabTime = 0.0f;
 	FVector InitialGrabbityGrabLocation;
+	FRotator InitialGrabbityGrabRotation;
+	FRotator InitialDeltaRotation;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Components")
 	AHandSkeletalActor* GrabbityHoverHand = nullptr;
